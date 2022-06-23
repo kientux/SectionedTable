@@ -35,6 +35,10 @@ public protocol TableSection: AnyObject {
 open class BaseTableSection<T>: TableSection {
     public var data: T?
     
+    public init() {
+        
+    }
+    
     // MARK: - Update data
     open func update(data: T, animated: Bool = true) {
         self.data = data

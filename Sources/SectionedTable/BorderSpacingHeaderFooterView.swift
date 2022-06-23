@@ -25,6 +25,8 @@ public class BorderSpacingHeaderFooterView: UITableViewHeaderFooterView {
     
     private func setup() {
         contentView.addSubview(borderView)
+        
+        borderView.translatesAutoresizingMaskIntoConstraints = false
         borderView.topAnchor.constraint(equalTo: topAnchor).isActive = true
         borderView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
         borderView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
@@ -75,8 +77,8 @@ class BorderView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        topLayer.isHidden = isTopBorderEnabled
-        bottomLayer.isHidden = isBottomBorderEnabled
+        topLayer.isHidden = !isTopBorderEnabled
+        bottomLayer.isHidden = !isBottomBorderEnabled
         
         topLayer.frame = CGRect(x: 0.0,
                                 y: 0.0,
