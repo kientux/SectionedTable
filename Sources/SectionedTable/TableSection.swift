@@ -29,6 +29,8 @@ public protocol TableSection: AnyObject {
     
     func didSelectRow(at index: Int)
     
+    var isAttached: Bool { get }
+    
     var adapter: SectionedTableAdapter? { get set }
 }
 
@@ -120,6 +122,16 @@ open class BaseTableSection<T>: TableSection {
         
     }
     
+    public var isAttached: Bool = true {
+        didSet {
+            if oldValue == isAttached {
+                return
+            }
+            
+            notifyAttachChanged()
+        }
+    }
+    
     weak open var adapter: SectionedTableAdapter?
     
     // MARK: - Convenience overriden methods
@@ -139,6 +151,16 @@ open class BaseTableSection<T>: TableSection {
     /// If using custom header, directly override `footer(for table: UITableView)` instead.
     open var footerStyle: TableHeaderFooterStyle {
         .none
+    }
+    
+    // MARK: - Privates
+    
+    private func notifyAttachChanged() {
+        if isAttached {
+            adapter?.notifyAttach(id: id)
+        } else {
+            adapter?.notifyDetach(id: id)
+        }
     }
 }
 

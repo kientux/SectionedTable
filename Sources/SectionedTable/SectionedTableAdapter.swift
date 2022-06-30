@@ -10,7 +10,12 @@ import UIKit
 
 public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableViewDelegate {
     
-    private var data: ContiguousArray<TableSection> = []
+    private var sections: ContiguousArray<TableSection> = [] {
+        didSet {
+            attachedSections = sections.filter({ $0.isAttached })
+        }
+    }
+    private var attachedSections: ContiguousArray<TableSection> = []
     private let tableView: UITableView
     private var cachedRowHeights: [IndexPath: CGFloat] = [:]
     
@@ -29,25 +34,44 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
     public func addSection(_ section: TableSection) {
         section.adapter = self
         registerCells(for: section)
-        data.append(section)
+        sections.append(section)
         
-        if data.count == 1 {
+        if attachedSections.count <= 1 {
             tableView.reloadData()
         } else {
-            tableView.insertSections(IndexSet(integer: data.count - 1), with: .none)
+            tableView.insertSections(IndexSet(integer: attachedSections.count - 1),
+                                     with: .none)
         }
     }
     
     public func reloadSection(id: Int, animated: Bool = true) {
-        if let index = data.firstIndex(where: { $0.id == id }) {
-            tableView.reloadSections(IndexSet(integer: index), with: animated ? .automatic : .none)
+        if let index = attachedSections.firstIndex(where: { $0.id == id }) {
+            tableView.reloadSections(IndexSet(integer: index),
+                                     with: animated ? .automatic : .none)
         }
     }
     
     public func reloadRows(_ rows: Set<Int>, sectionId: Int, animated: Bool = true) {
-        if let index = data.firstIndex(where: { $0.id == sectionId }) {
+        if let index = attachedSections.firstIndex(where: { $0.id == sectionId }) {
             tableView.reloadRows(at: rows.map({ IndexPath(row: $0, section: index) }),
                                  with: animated ? .automatic : .none)
+        }
+    }
+    
+    public func notifyAttach(id: Int) {
+        attachedSections = sections.filter({ $0.isAttached })
+        
+        if let index = attachedSections.firstIndex(where: { $0.id == id }) {
+            tableView.insertSections(IndexSet(integer: index),
+                                     with: .fade)
+        }
+    }
+    
+    public func notifyDetach(id: Int) {
+        if let index = attachedSections.firstIndex(where: { $0.id == id }) {
+            attachedSections = sections.filter({ $0.isAttached })
+            tableView.deleteSections(IndexSet(integer: index),
+                                     with: .fade)
         }
     }
     
@@ -58,19 +82,19 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
     }
     
     public func numberOfSections(in tableView: UITableView) -> Int {
-        data.count
+        attachedSections.count
     }
     
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        data[section].numberOfItems
+        attachedSections[section].numberOfItems
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        data[indexPath.section].cellForRow(at: indexPath, table: tableView)
+        attachedSections[indexPath.section].cellForRow(at: indexPath, table: tableView)
     }
     
     public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        data[indexPath.section].heightForRow(at: indexPath.row).value
+        attachedSections[indexPath.section].heightForRow(at: indexPath.row).value
     }
     
     public func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -78,24 +102,24 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
     }
     
     public func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        data[section].headerSpacing.value
+        attachedSections[section].headerSpacing.value
     }
     
     public func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        data[section].header(for: tableView)
+        attachedSections[section].header(for: tableView)
     }
     
     public func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        data[section].footer(for: tableView)
+        attachedSections[section].footer(for: tableView)
     }
     
     public func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        data[section].footerSpacing.value
+        attachedSections[section].footerSpacing.value
     }
     
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        data[indexPath.section].didSelectRow(at: indexPath.row)
+        attachedSections[indexPath.section].didSelectRow(at: indexPath.row)
     }
     
     public func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
