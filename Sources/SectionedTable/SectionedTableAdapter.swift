@@ -32,13 +32,17 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
     }
     
     public func addSection(_ section: TableSection) {
-        if sections.contains(where: { $0.id == section.id }) {
-            fatalError("Section ID must be unique. ID \(section.id) already exists.")
+        if let existed = sections.first(where: { $0.id == section.id }) {
+            fatalError("Id \(section.id) already exists for section \(String(describing: type(of: existed)))")
         }
         
         section.adapter = self
         registerCells(for: section)
         sections.append(section)
+        
+        if !section.isAttached {
+            return
+        }
         
         if attachedSections.count <= 1 {
             tableView.reloadData()
