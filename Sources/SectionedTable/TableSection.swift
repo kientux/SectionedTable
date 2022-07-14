@@ -37,6 +37,9 @@ public protocol TableSection: AnyObject {
 open class BaseTableSection<T>: TableSection {
     public var data: T?
     
+    /// Convenience closure called on `didSelectRow(at:)`
+    public var itemSelectedAction: ((Int) -> Void)?
+    
     public init() {
         
     }
@@ -119,7 +122,7 @@ open class BaseTableSection<T>: TableSection {
     }
     
     open func didSelectRow(at index: Int) {
-        
+        itemSelectedAction?(index)
     }
     
     public var isAttached: Bool = true {
