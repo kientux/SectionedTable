@@ -60,6 +60,15 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
         }
     }
     
+    public func addSectionIfNotExist(_ section: TableSection) -> Bool {
+        if sections.contains(where: { $0.id == section.id }) {
+            return false
+        }
+        
+        addSection(section)
+        return true
+    }
+    
     public func reloadSection(id: Int, animated: Bool = true) {
         if let index = attachedSections.firstIndex(where: { $0.id == id }) {
             tableView.reloadSections(IndexSet(integer: index),
@@ -85,7 +94,7 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
     
     public func notifyDetach(id: Int) {
         if let index = attachedSections.firstIndex(where: { $0.id == id }) {
-            attachedSections = sections.filter({ $0.isAttached })
+            attachedSections.remove(at: index)
             tableView.deleteSections(IndexSet(integer: index),
                                      with: .fade)
         }
