@@ -44,6 +44,14 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
             return
         }
         
+        /// Check to fix `UITableViewAlertForLayoutOutsideViewHierarchy` warning
+        /// This warning is shown when addSection get called in viewDidLoad,
+        /// right after tableView is added into view hierachy and not yet visible.
+        /// Later when tableView is added to window and visible, it will automatically reload itself.
+        if tableView.window == nil {
+            return
+        }
+        
         if attachedSections.count <= 1 {
             tableView.reloadData()
         } else {
