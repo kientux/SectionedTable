@@ -47,12 +47,13 @@ open class BaseTableSection<T>: TableSection {
     // MARK: - Update data
     open func update(data: T, animated: Bool = true) {
         self.data = data
+        guard isAttached else { return }
         self.adapter?.reloadSection(id: id, animated: animated)
     }
     
     open func update(data: T, updatedIndexes: Set<Int>, animated: Bool) {
         self.data = data
-        
+        guard isAttached else { return }
         self.adapter?.reloadRows(updatedIndexes,
                                  sectionId: id,
                                  animated: animated)
