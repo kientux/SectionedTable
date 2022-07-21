@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 
 public protocol TableSection: AnyObject {
-    var id: Int { get }
+    var id: AnyHashable { get }
     
     var numberOfItems: Int { get }
     
@@ -62,13 +62,13 @@ open class BaseTableSection<T>: TableSection {
     // MARK: - `TableSection` conformances
     
     /// Must be overriden
-    open var id: Int {
-        fatalError()
+    open var id: AnyHashable {
+        fatalError("Must be overriden")
     }
     
     /// Must be overriden
     open var numberOfItems: Int {
-        fatalError()
+        fatalError("Must be overriden")
     }
     
     open var reusableViewRegisters: [TableReusableViewRegister] {
@@ -79,7 +79,7 @@ open class BaseTableSection<T>: TableSection {
     
     /// Must be overriden
     open func cellForRow(at indexPath: IndexPath, table: UITableView) -> UITableViewCell {
-        fatalError()
+        fatalError("Must be overriden")
     }
     
     open func heightForRow(at index: Int) -> TableSpacing {
@@ -142,7 +142,7 @@ open class BaseTableSection<T>: TableSection {
     
     /// Must be overriden to register cells or custom header
     open var registrations: [TableReusableRegistration] {
-        fatalError()
+        fatalError("Must be overriden")
     }
     
     /// Override to quickly enable `.spacing` header

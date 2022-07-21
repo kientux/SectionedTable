@@ -69,34 +69,59 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
         return true
     }
     
-    public func reloadSection(id: Int, animated: Bool = true) {
+    public func reloadSection(id: AnyHashable, animated: Bool = true) {
         if let index = attachedSections.firstIndex(where: { $0.id == id }) {
             tableView.reloadSections(IndexSet(integer: index),
                                      with: animated ? .automatic : .none)
         }
     }
     
-    public func reloadRows(_ rows: Set<Int>, sectionId: Int, animated: Bool = true) {
+    public func reloadRows(_ rows: Set<Int>, sectionId: AnyHashable, animated: Bool = true) {
         if let index = attachedSections.firstIndex(where: { $0.id == sectionId }) {
             tableView.reloadRows(at: rows.map({ IndexPath(row: $0, section: index) }),
                                  with: animated ? .automatic : .none)
         }
     }
     
-    public func notifyAttach(id: Int) {
+    /// If a single section is attached/detached, it's not really a batch update,
+    /// but when multiple sections are attached/detached simultaneously
+    /// then it can causes `tableView.numberOfSections` to be different from
+    /// dataSource's `numberOfSections(in:)` and cause index-out-of-bound
+    /// (as stated in Apple docs, `tableView.numberOfSections` is internally cached, that's maybe the reason).
+    /// So we always perform a batch update here to avoid the crash.
+    public func notifyAttach(id: AnyHashable) {
         attachedSections = sections.filter({ $0.isAttached })
         
         if let index = attachedSections.firstIndex(where: { $0.id == id }) {
-            tableView.insertSections(IndexSet(integer: index),
-                                     with: .fade)
+            if #available(iOS 11.0, *) {
+                tableView.performBatchUpdates {
+                    tableView.insertSections(IndexSet(integer: index),
+                                             with: .fade)
+                }
+            } else {
+                tableView.beginUpdates()
+                tableView.insertSections(IndexSet(integer: index),
+                                         with: .fade)
+                tableView.endUpdates()
+            }
         }
     }
     
-    public func notifyDetach(id: Int) {
+    public func notifyDetach(id: AnyHashable) {
         if let index = attachedSections.firstIndex(where: { $0.id == id }) {
-            attachedSections.remove(at: index)
-            tableView.deleteSections(IndexSet(integer: index),
-                                     with: .fade)
+            if #available(iOS 11.0, *) {
+                tableView.performBatchUpdates {
+                    attachedSections.remove(at: index)
+                    tableView.deleteSections(IndexSet(integer: index),
+                                             with: .fade)
+                }
+            } else {
+                tableView.beginUpdates()
+                attachedSections.remove(at: index)
+                tableView.deleteSections(IndexSet(integer: index),
+                                         with: .fade)
+                tableView.endUpdates()
+            }
         }
     }
     
