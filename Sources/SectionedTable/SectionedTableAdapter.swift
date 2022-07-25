@@ -125,6 +125,19 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
         }
     }
     
+    public func notifyHeightChanged(id: AnyHashable) {
+        guard attachedSections.contains(where: { $0.id == id }) else {
+            return
+        }
+        
+        if #available(iOS 11.0, *) {
+            tableView.performBatchUpdates {}
+        } else {
+            tableView.beginUpdates()
+            tableView.endUpdates()
+        }
+    }
+    
     private func registerCells(for section: TableSection) {
         for reg in section.reusableViewRegisters {
             reg.register(for: tableView)

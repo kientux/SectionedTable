@@ -180,4 +180,8 @@ extension BaseTableSection {
         view.borderView.isBottomBorderEnabled = bottom
         return view
     }
+    
+    public func notifyHeightChanged() {
+        adapter?.notifyHeightChanged(id: id)
+    }
 }
