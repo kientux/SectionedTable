@@ -83,6 +83,13 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
         }
     }
     
+    public func insertRows(_ rows: Set<Int>, sectionId: AnyHashable, animated: Bool = true) {
+        if let index = attachedSections.firstIndex(where: { $0.id == sectionId }) {
+            tableView.insertRows(at: rows.map({ IndexPath(row: $0, section: index) }),
+                                 with: animated ? .automatic : .none)
+        }
+    }
+    
     /// If a single section is attached/detached, it's not really a batch update,
     /// but when multiple sections are attached/detached simultaneously
     /// then it can causes `tableView.numberOfSections` to be different from

@@ -45,16 +45,47 @@ open class BaseTableSection<T>: TableSection {
     }
     
     // MARK: - Update data
+    
+    /// Update new data and reload whole section
+    /// - Parameters:
+    ///   - data: new data
+    ///   - animated: animated
     open func update(data: T, animated: Bool = true) {
         self.data = data
         guard isAttached else { return }
         self.adapter?.reloadSection(id: id, animated: animated)
     }
     
+    /// Update new data of section, and only notify a set of indexes
+    /// - Parameters:
+    ///   - data: new data
+    ///   - updatedIndexes: indexes to notify reloaded
+    ///   - animated: animated
     open func update(data: T, updatedIndexes: Set<Int>, animated: Bool) {
         self.data = data
         guard isAttached else { return }
         self.adapter?.reloadRows(updatedIndexes,
+                                 sectionId: id,
+                                 animated: animated)
+    }
+    
+    /// Insert new items to section, using `insertion` to modify current data
+    /// - Parameters:
+    ///   - insertion: closure to modify current data
+    ///   - animated: animated
+    open func insert(using insertion: (T) -> T, animated: Bool = true) {
+        guard let data = data else {
+            return
+        }
+        
+        let numberOfItemsBefore = self.numberOfItems
+        
+        let newData = insertion(data)
+        self.data = newData
+        
+        guard isAttached else { return }
+        
+        self.adapter?.insertRows(Set(numberOfItemsBefore..<numberOfItems),
                                  sectionId: id,
                                  animated: animated)
     }
