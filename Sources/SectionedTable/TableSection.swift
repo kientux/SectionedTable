@@ -103,9 +103,9 @@ open class BaseTableSection<T>: TableSection {
     }
     
     open var reusableViewRegisters: [TableReusableViewRegister] {
-        var registrations = registrations
-        registrations.append(.headerFooterClass(BorderSpacingHeaderFooterView.self))
-        return registrations
+        var regs = registrations
+        regs.append(.headerFooterClass(BorderSpacingHeaderFooterView.self))
+        return regs
     }
     
     /// Must be overriden
