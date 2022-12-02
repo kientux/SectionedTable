@@ -13,11 +13,28 @@ public protocol TableReusableViewRegister {
 }
 
 public enum TableReusableRegistration {
+    // cell with nib
     case cell(UITableViewCell.Type)
+    
+    // cell with nib in custom bundle
+    case cellInBundle(UITableViewCell.Type, Bundle)
+    
+    // cell class
     case cellClass(UITableViewCell.Type)
     
+    // header/footer with nib
     case headerFooter(UITableViewHeaderFooterView.Type)
+    
+    // header/footer with nib in custom bundle
+    case headerFooterInBundle(UITableViewHeaderFooterView.Type, Bundle)
+    
+    // header/footer class
     case headerFooterClass(UITableViewHeaderFooterView.Type)
+}
+
+extension TableReusableRegistration {
+    // global resources bundle for cell/header/footer registration
+    public static var resourcesBundle: Bundle = .main
 }
 
 extension TableReusableRegistration: TableReusableViewRegister {
@@ -25,10 +42,14 @@ extension TableReusableRegistration: TableReusableViewRegister {
         switch self {
         case .cell(let cell):
             table.registerNib(for: cell)
+        case .cellInBundle(let cell, let bundle):
+            table.registerNib(for: cell, bundle: bundle, reuseId: cell.reuseId)
         case .cellClass(let cell):
             table.registerClass(for: cell)
         case .headerFooter(let view):
             table.registerNib(forHeaderFooter: view)
+        case .headerFooterInBundle(let view, let bundle):
+            table.registerNib(forHeaderFooter: view, bundle: bundle, reuseId: view.reuseId)
         case .headerFooterClass(let view):
             table.registerClass(forHeaderFooter: view)
         }
@@ -40,19 +61,21 @@ extension UIView {
         return String(describing: self)
     }
     
-    static var nib: UINib {
+    static func nib(from bundle: Bundle) -> UINib {
         return UINib(nibName: String(describing: self),
-                     bundle: .main)
+                     bundle: bundle)
     }
 }
 
 extension UITableView {
     func registerNib(for cellClass: UITableViewCell.Type) {
-        registerNib(for: cellClass, reuseId: cellClass.reuseId)
+        registerNib(for: cellClass,
+                    bundle: TableReusableRegistration.resourcesBundle,
+                    reuseId: cellClass.reuseId)
     }
 
-    func registerNib(for cellClass: UITableViewCell.Type, reuseId: String) {
-        register(cellClass.nib, forCellReuseIdentifier: reuseId)
+    func registerNib(for cellClass: UITableViewCell.Type, bundle: Bundle, reuseId: String) {
+        register(cellClass.nib(from: bundle), forCellReuseIdentifier: reuseId)
     }
 
     func registerClass(for cellClass: UITableViewCell.Type) {
@@ -72,12 +95,13 @@ extension UITableView {
     }
     
     func registerNib(forHeaderFooter aClass: UITableViewHeaderFooterView.Type) {
-        registerNib(forHeaderFooter: aClass, reuseId: aClass.reuseId)
+        registerNib(forHeaderFooter: aClass,
+                    bundle: TableReusableRegistration.resourcesBundle,
+                    reuseId: aClass.reuseId)
     }
 
-    func registerNib(forHeaderFooter aClass: UITableViewHeaderFooterView.Type, reuseId: String) {
-        register(UINib(nibName: String(describing: aClass), bundle: nil),
-                 forHeaderFooterViewReuseIdentifier: reuseId)
+    func registerNib(forHeaderFooter aClass: UITableViewHeaderFooterView.Type, bundle: Bundle, reuseId: String) {
+        register(aClass.nib(from: bundle), forHeaderFooterViewReuseIdentifier: reuseId)
     }
 
     func registerNibs<T: UITableViewCell>(for cellClasses: [T.Type]) {
