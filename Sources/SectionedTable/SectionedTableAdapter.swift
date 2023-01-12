@@ -19,6 +19,8 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
     private let tableView: UITableView
     private var cachedRowHeights: [IndexPath: CGFloat] = [:]
     
+    public weak var forwaredDelegate: UITableViewDelegate?
+    
     public init(tableView: UITableView) {
         self.tableView = tableView
         
@@ -90,6 +92,10 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
         }
     }
     
+    public func index(of section: TableSection) -> Int? {
+        attachedSections.firstIndex(where: { $0.id == section.id })
+    }
+    
     /// If a single section is attached/detached, it's not really a batch update,
     /// but when multiple sections are attached/detached simultaneously
     /// then it can causes `tableView.numberOfSections` to be different from
@@ -156,6 +162,8 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
         }
     }
     
+    // MARK: - UITableViewDataSource
+    
     public func numberOfSections(in tableView: UITableView) -> Int {
         attachedSections.count
     }
@@ -168,36 +176,54 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
         attachedSections[indexPath.section].cellForRow(at: indexPath, table: tableView)
     }
     
+    // MARK: - UITableViewDelegate
+    
     public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        attachedSections[indexPath.section].heightForRow(at: indexPath.row).value
+        forwaredDelegate?.tableView?(tableView, heightForRowAt: indexPath)
+        ?? attachedSections[indexPath.section].heightForRow(at: indexPath.row).value
     }
     
     public func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        cachedRowHeights[indexPath] ?? tableView.estimatedRowHeight
+        forwaredDelegate?.tableView?(tableView, estimatedHeightForRowAt: indexPath)
+        ?? cachedRowHeights[indexPath]
+        ?? tableView.estimatedRowHeight
     }
     
     public func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        attachedSections[section].headerSpacing.value
+        forwaredDelegate?.tableView?(tableView, heightForHeaderInSection: section)
+        ?? attachedSections[section].headerSpacing.value
     }
     
     public func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        attachedSections[section].header(for: tableView)
+        forwaredDelegate?.tableView?(tableView, viewForHeaderInSection: section)
+        ?? attachedSections[section].header(for: tableView)
     }
     
     public func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        attachedSections[section].footer(for: tableView)
+        forwaredDelegate?.tableView?(tableView, viewForFooterInSection: section)
+        ?? attachedSections[section].footer(for: tableView)
     }
     
     public func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        attachedSections[section].footerSpacing.value
+        forwaredDelegate?.tableView?(tableView, heightForFooterInSection: section)
+        ?? attachedSections[section].footerSpacing.value
     }
     
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if forwaredDelegate?.tableView?(tableView, didSelectRowAt: indexPath) != nil {
+            return
+        }
+        
         tableView.deselectRow(at: indexPath, animated: true)
         attachedSections[indexPath.section].didSelectRow(at: indexPath.row)
+        attachedSections[indexPath.section].didSelectRow(at: indexPath)
     }
     
     public func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        if forwaredDelegate?.tableView?(tableView, willDisplay: cell, forRowAt: indexPath) != nil {
+            return
+        }
+        
         cachedRowHeights[indexPath] = cell.frame.height
     }
 }

@@ -29,6 +29,8 @@ public protocol TableSection: AnyObject {
     
     func didSelectRow(at index: Int)
     
+    func didSelectRow(at indexPath: IndexPath)
+    
     var isAttached: Bool { get }
     
     var adapter: SectionedTableAdapter? { get set }
@@ -153,8 +155,13 @@ open class BaseTableSection<T>: TableSection {
         }
     }
     
+    @available(*, deprecated, message: "Override didSelectRow(at indexPath: IndexPath) instead")
     open func didSelectRow(at index: Int) {
         itemSelectedAction?(index)
+    }
+    
+    open func didSelectRow(at indexPath: IndexPath) {
+        itemSelectedAction?(indexPath.row)
     }
     
     public var isAttached: Bool = true {
