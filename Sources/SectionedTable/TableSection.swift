@@ -27,8 +27,6 @@ public protocol TableSection: AnyObject {
     
     var footerSpacing: TableSpacing { get }
     
-    func didSelectRow(at index: Int)
-    
     func didSelectRow(at indexPath: IndexPath)
     
     var isAttached: Bool { get }
@@ -153,11 +151,6 @@ open class BaseTableSection<T>: TableSection {
         case .none:
             return .invisible
         }
-    }
-    
-    @available(*, deprecated, message: "Override didSelectRow(at indexPath: IndexPath) instead")
-    open func didSelectRow(at index: Int) {
-        itemSelectedAction?(index)
     }
     
     open func didSelectRow(at indexPath: IndexPath) {

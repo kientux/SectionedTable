@@ -217,7 +217,6 @@ extension SectionedTableAdapter: UITableViewDelegate {
         forwaredDelegate?.tableView?(tableView, didSelectRowAt: indexPath)
         ?? {
             tableView.deselectRow(at: indexPath, animated: true)
-            attachedSections[indexPath.section].didSelectRow(at: indexPath.row)
             attachedSections[indexPath.section].didSelectRow(at: indexPath)
         }()
     }
