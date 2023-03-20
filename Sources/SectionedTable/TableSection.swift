@@ -11,24 +11,26 @@ import UIKit
 public protocol TableSection: AnyObject {
     var id: AnyHashable { get }
     
+    // DataSources
     var numberOfItems: Int { get }
-    
     var reusableViewRegisters: [TableReusableViewRegister] { get }
-    
     func cellForRow(at indexPath: IndexPath, table: UITableView) -> UITableViewCell
     
     func heightForRow(at index: Int) -> TableSpacing
     
+    // Editing
+    func actionsForRow(at indexPath: IndexPath) -> [UIContextualAction]
+    
+    // Header & Footer
     func header(for table: UITableView) -> UIView?
-    
     var headerSpacing: TableSpacing { get }
-    
     func footer(for table: UITableView) -> UIView?
-    
     var footerSpacing: TableSpacing { get }
     
+    // Actions
     func didSelectRow(at indexPath: IndexPath)
     
+    // Miscs
     var isAttached: Bool { get }
     
     var adapter: SectionedTableAdapter? { get set }
@@ -115,6 +117,10 @@ open class BaseTableSection<T>: TableSection {
     
     open func heightForRow(at index: Int) -> TableSpacing {
         .auto
+    }
+    
+    open func actionsForRow(at indexPath: IndexPath) -> [UIContextualAction] {
+        []
     }
     
     open func header(for table: UITableView) -> UIView? {

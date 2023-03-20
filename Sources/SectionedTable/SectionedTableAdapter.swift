@@ -228,6 +228,17 @@ extension SectionedTableAdapter: UITableViewDelegate {
         }()
     }
     
+    public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let actions = attachedSections[indexPath.section].actionsForRow(at: indexPath)
+        if actions.isEmpty {
+            return nil
+        }
+        
+        let action = UISwipeActionsConfiguration(actions: actions)
+        action.performsFirstActionWithFullSwipe = false
+        return action
+    }
+    
     // MARK: - UIScrollViewDelegate
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         forwaredDelegate?.scrollViewDidScroll?(scrollView)
