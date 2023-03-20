@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableViewDelegate {
+public class SectionedTableAdapter: NSObject {
     
     private var sections: ContiguousArray<TableSection> = [] {
         didSet {
@@ -16,9 +16,9 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
         }
     }
     private var attachedSections: ContiguousArray<TableSection> = []
-    private let tableView: UITableView
     private var cachedRowHeights: [IndexPath: CGFloat] = [:]
     
+    public let tableView: UITableView
     public weak var forwaredDelegate: UITableViewDelegate?
     
     public init(tableView: UITableView) {
@@ -161,8 +161,10 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
             reg.register(for: tableView)
         }
     }
-    
-    // MARK: - UITableViewDataSource
+}
+
+// MARK: - UITableViewDataSource
+extension SectionedTableAdapter: UITableViewDataSource {
     
     public func numberOfSections(in tableView: UITableView) -> Int {
         attachedSections.count
@@ -175,8 +177,10 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         attachedSections[indexPath.section].cellForRow(at: indexPath, table: tableView)
     }
-    
-    // MARK: - UITableViewDelegate
+}
+
+// MARK: - UITableViewDelegate
+extension SectionedTableAdapter: UITableViewDelegate {
     
     public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         forwaredDelegate?.tableView?(tableView, heightForRowAt: indexPath)
@@ -210,20 +214,31 @@ public class SectionedTableAdapter: NSObject, UITableViewDataSource, UITableView
     }
     
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if forwaredDelegate?.tableView?(tableView, didSelectRowAt: indexPath) != nil {
-            return
-        }
-        
-        tableView.deselectRow(at: indexPath, animated: true)
-        attachedSections[indexPath.section].didSelectRow(at: indexPath.row)
-        attachedSections[indexPath.section].didSelectRow(at: indexPath)
+        forwaredDelegate?.tableView?(tableView, didSelectRowAt: indexPath)
+        ?? {
+            tableView.deselectRow(at: indexPath, animated: true)
+            attachedSections[indexPath.section].didSelectRow(at: indexPath.row)
+            attachedSections[indexPath.section].didSelectRow(at: indexPath)
+        }()
     }
     
     public func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        if forwaredDelegate?.tableView?(tableView, willDisplay: cell, forRowAt: indexPath) != nil {
-            return
-        }
-        
-        cachedRowHeights[indexPath] = cell.frame.height
+        forwaredDelegate?.tableView?(tableView, willDisplay: cell, forRowAt: indexPath)
+        ?? {
+            cachedRowHeights[indexPath] = cell.frame.height
+        }()
+    }
+    
+    // MARK: - UIScrollViewDelegate
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        forwaredDelegate?.scrollViewDidScroll?(scrollView)
+    }
+    
+    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        forwaredDelegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
+    }
+    
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        forwaredDelegate?.scrollViewDidEndDecelerating?(scrollView)
     }
 }
