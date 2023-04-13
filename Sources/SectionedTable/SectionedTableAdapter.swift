@@ -228,6 +228,11 @@ extension SectionedTableAdapter: UITableViewDelegate {
         }()
     }
     
+    /// use `tableView(_:trailingSwipeActionsConfigurationForRowAt:)` instead
+    public func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
+        .none
+    }
+    
     public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let actions = attachedSections[indexPath.section].actionsForRow(at: indexPath)
         if actions.isEmpty {
