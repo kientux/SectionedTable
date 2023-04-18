@@ -19,7 +19,7 @@ public class SectionedTableAdapter: NSObject {
     private var cachedRowHeights: [IndexPath: CGFloat] = [:]
     
     public let tableView: UITableView
-    public weak var forwaredDelegate: UITableViewDelegate?
+    public weak var forwaredScrollDelegate: UIScrollViewDelegate?
     
     public init(tableView: UITableView) {
         self.tableView = tableView
@@ -183,49 +183,36 @@ extension SectionedTableAdapter: UITableViewDataSource {
 extension SectionedTableAdapter: UITableViewDelegate {
     
     public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        forwaredDelegate?.tableView?(tableView, heightForRowAt: indexPath)
-        ?? attachedSections[indexPath.section].heightForRow(at: indexPath.row).value
+        attachedSections[indexPath.section].heightForRow(at: indexPath.row).value
     }
     
     public func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        forwaredDelegate?.tableView?(tableView, estimatedHeightForRowAt: indexPath)
-        ?? cachedRowHeights[indexPath]
-        ?? tableView.estimatedRowHeight
+        cachedRowHeights[indexPath] ?? tableView.estimatedRowHeight
     }
     
     public func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        forwaredDelegate?.tableView?(tableView, heightForHeaderInSection: section)
-        ?? attachedSections[section].headerSpacing.value
+        attachedSections[section].headerSpacing.value
     }
     
     public func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        forwaredDelegate?.tableView?(tableView, viewForHeaderInSection: section)
-        ?? attachedSections[section].header(for: tableView)
+        attachedSections[section].header(for: tableView)
     }
     
     public func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        forwaredDelegate?.tableView?(tableView, viewForFooterInSection: section)
-        ?? attachedSections[section].footer(for: tableView)
+        attachedSections[section].footer(for: tableView)
     }
     
     public func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        forwaredDelegate?.tableView?(tableView, heightForFooterInSection: section)
-        ?? attachedSections[section].footerSpacing.value
+        attachedSections[section].footerSpacing.value
     }
     
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        forwaredDelegate?.tableView?(tableView, didSelectRowAt: indexPath)
-        ?? {
-            tableView.deselectRow(at: indexPath, animated: true)
-            attachedSections[indexPath.section].didSelectRow(at: indexPath)
-        }()
+        tableView.deselectRow(at: indexPath, animated: true)
+        attachedSections[indexPath.section].didSelectRow(at: indexPath)
     }
     
     public func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        forwaredDelegate?.tableView?(tableView, willDisplay: cell, forRowAt: indexPath)
-        ?? {
-            cachedRowHeights[indexPath] = cell.frame.height
-        }()
+        cachedRowHeights[indexPath] = cell.frame.height
     }
     
     public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
@@ -240,27 +227,28 @@ extension SectionedTableAdapter: UITableViewDelegate {
     }
     
     // MARK: - UIScrollViewDelegate
+    
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        forwaredDelegate?.scrollViewDidScroll?(scrollView)
+        forwaredScrollDelegate?.scrollViewDidScroll?(scrollView)
     }
     
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        forwaredDelegate?.scrollViewWillBeginDragging?(scrollView)
+        forwaredScrollDelegate?.scrollViewWillBeginDragging?(scrollView)
     }
     
     public func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        forwaredDelegate?.scrollViewWillEndDragging?(scrollView, withVelocity: velocity, targetContentOffset: targetContentOffset)
+        forwaredScrollDelegate?.scrollViewWillEndDragging?(scrollView, withVelocity: velocity, targetContentOffset: targetContentOffset)
     }
     
     public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        forwaredDelegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
+        forwaredScrollDelegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
     }
     
     public func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) {
-        forwaredDelegate?.scrollViewWillBeginDecelerating?(scrollView)
+        forwaredScrollDelegate?.scrollViewWillBeginDecelerating?(scrollView)
     }
     
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        forwaredDelegate?.scrollViewDidEndDecelerating?(scrollView)
+        forwaredScrollDelegate?.scrollViewDidEndDecelerating?(scrollView)
     }
 }
