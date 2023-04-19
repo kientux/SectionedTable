@@ -138,6 +138,64 @@ public class SectionedTableAdapter: NSObject {
         }
     }
     
+    /// Update attach status of all sections and notify tableView
+    /// - Parameter ids: ids of attached sections
+    public func updateAttachedSections(ids: [AnyHashable]) {
+        let attachedIds = attachedSections.map({ $0.id })
+        let allIds = sections.map({ $0.id })
+        
+        let attaches = allIds.filter({ ids.contains($0) && !attachedIds.contains($0) })
+        let detaches = allIds.filter({ !ids.contains($0) && attachedIds.contains($0) })
+        
+        sections.forEach({ $0.updateAttached(ids.contains($0.id), notify: false) })
+        
+        notifyAttachesAndDetaches(attaches: attaches, detaches: detaches)
+    }
+    
+    public func notifyAttachesAndDetaches(attaches: [AnyHashable], detaches: [AnyHashable]) {
+        if attaches.isEmpty && detaches.isEmpty {
+            return
+        }
+        
+        let calculateRemovedIndexes = {
+            var removedIndexes: [Int] = []
+            for (index, section) in self.attachedSections.enumerated() {
+                if detaches.contains(section.id) {
+                    removedIndexes.append(index)
+                }
+            }
+            return removedIndexes
+        }
+        
+        let calculateInsertedIndexes = {
+            var insertedIndexes: [Int] = []
+            for (index, section) in self.attachedSections.enumerated() {
+                if attaches.contains(section.id) {
+                    insertedIndexes.append(index)
+                }
+            }
+            return insertedIndexes
+        }
+        
+        let removedIndexes = calculateRemovedIndexes()
+        
+        if #available(iOS 11.0, *) {
+            tableView.performBatchUpdates {
+                attachedSections = sections.filter({ $0.isAttached })
+                tableView.deleteSections(IndexSet(removedIndexes), with: .fade)
+                let insertedIndexes = calculateInsertedIndexes()
+                tableView.insertSections(IndexSet(insertedIndexes), with: .fade)
+            }
+        } else {
+            tableView.beginUpdates()
+            attachedSections = sections.filter({ $0.isAttached })
+            tableView.deleteSections(IndexSet(removedIndexes), with: .fade)
+            let insertedIndexes = calculateInsertedIndexes()
+            tableView.insertSections(IndexSet(insertedIndexes), with: .fade)
+            tableView.endUpdates()
+        }
+    }
+    
     public func notifyHeightChanged(id: AnyHashable) {
         guard attachedSections.contains(where: { $0.id == id }) else {
             return

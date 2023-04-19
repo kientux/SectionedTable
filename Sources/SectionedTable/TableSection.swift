@@ -32,11 +32,14 @@ public protocol TableSection: AnyObject {
     
     // Miscs
     var isAttached: Bool { get }
+    func updateAttached(_ isAttached: Bool, notify: Bool)
     
     var adapter: SectionedTableAdapter? { get set }
 }
 
 open class BaseTableSection<T>: TableSection {
+    private var internalAttached: Bool = true
+    
     public var data: T?
     
     /// Convenience closure called on `didSelectRow(at:)`
@@ -163,12 +166,19 @@ open class BaseTableSection<T>: TableSection {
         itemSelectedAction?(indexPath.row)
     }
     
-    public var isAttached: Bool = true {
-        didSet {
-            if oldValue == isAttached {
-                return
-            }
-            
+    public var isAttached: Bool {
+        get { internalAttached }
+        set { updateAttached(newValue, notify: true) }
+    }
+    
+    public func updateAttached(_ isAttached: Bool, notify: Bool) {
+        if isAttached == internalAttached {
+            return
+        }
+        
+        internalAttached = isAttached
+        
+        if notify {
             notifyAttachChanged()
         }
     }
