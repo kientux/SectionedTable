@@ -74,6 +74,34 @@ open class BaseTableSection<T>: TableSection {
                                  animated: animated)
     }
     
+    /// Update new data using `updation` and reload only updated indexes
+    /// - Parameters:
+    ///   - updation: closure to modify current data
+    ///   - updatedIndexes: updated indexes to reload
+    ///   - animated: animated
+    open func update(using updation: (T) -> T, updatedIndexes: Set<Int>, animated: Bool = true) {
+        guard let data = data else {
+            return
+        }
+        
+        let newData = updation(data)
+        self.data = newData
+        
+        guard isAttached else { return }
+        
+        self.adapter?.reloadRows(updatedIndexes,
+                                 sectionId: id,
+                                 animated: animated)
+    }
+    
+    open func update<E>(item: E, index: Int, animated: Bool = true) where T == [E] {
+        update(using: {
+            var data = $0
+            data[index] = item
+            return data
+        }, updatedIndexes: [index], animated: animated)
+    }
+    
     /// Insert new items to section, using `insertion` to modify current data
     /// - Parameters:
     ///   - insertion: closure to modify current data
@@ -93,6 +121,14 @@ open class BaseTableSection<T>: TableSection {
         self.adapter?.insertRows(Set(numberOfItemsBefore..<numberOfItems),
                                  sectionId: id,
                                  animated: animated)
+    }
+    
+    open func insert<E>(items: [E], animated: Bool = true) where T == [E] {
+        insert(using: {
+            var data = $0
+            data.append(contentsOf: items)
+            return data
+        }, animated: animated)
     }
     
     // MARK: - `TableSection` conformances
