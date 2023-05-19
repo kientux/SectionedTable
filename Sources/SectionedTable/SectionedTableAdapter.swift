@@ -202,15 +202,14 @@ public class SectionedTableAdapter: NSObject {
         }
         
         if #available(iOS 11.0, *) {
-            UIView.setAnimationsEnabled(false)
-            tableView.performBatchUpdates({}) { _ in
-                UIView.setAnimationsEnabled(true)
+            UIView.performWithoutAnimation {
+                self.tableView.performBatchUpdates({}) { _ in }
             }
         } else {
-            UIView.setAnimationsEnabled(false)
-            tableView.beginUpdates()
-            tableView.endUpdates()
-            UIView.setAnimationsEnabled(true)
+            UIView.performWithoutAnimation {
+                self.tableView.beginUpdates()
+                self.tableView.endUpdates()
+            }
         }
     }
     
