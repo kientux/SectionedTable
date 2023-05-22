@@ -10,6 +10,20 @@ import UIKit
 
 public class SectionedTableAdapter: NSObject {
     
+    public class MoveHandler {
+        public var canMoveFrom: (IndexPath) -> Bool = { _ in true }
+        public var canMoveTo: (IndexPath, IndexPath) -> Bool = { _, _ in true }
+        public var didMove: (IndexPath, IndexPath) -> Void
+        
+        public init(didMove: @escaping (_ source: IndexPath, _ dest: IndexPath) -> Void,
+                    canMoveFrom: @escaping (_ source: IndexPath) -> Bool = { _ in true },
+                    canMoveTo: @escaping (_ source: IndexPath, _ dest: IndexPath) -> Bool = { _, _ in true }) {
+            self.didMove = didMove
+            self.canMoveFrom = canMoveFrom
+            self.canMoveTo = canMoveTo
+        }
+    }
+    
     private var sections: ContiguousArray<TableSection> = [] {
         didSet {
             attachedSections = sections.filter({ $0.isAttached })
@@ -20,6 +34,18 @@ public class SectionedTableAdapter: NSObject {
     
     public let tableView: UITableView
     public weak var forwaredScrollDelegate: UIScrollViewDelegate?
+    
+    public var moveHandler: MoveHandler? {
+        didSet {
+            if moveHandler != nil {
+                tableView.dragDelegate = self
+                tableView.dragInteractionEnabled = true
+            } else {
+                tableView.dragDelegate = nil
+                tableView.dragInteractionEnabled = false
+            }
+        }
+    }
     
     public init(tableView: UITableView) {
         self.tableView = tableView
@@ -283,6 +309,10 @@ extension SectionedTableAdapter: UITableViewDelegate {
         return action
     }
     
+    public func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        moveHandler?.didMove(sourceIndexPath, destinationIndexPath)
+    }
+    
     // MARK: - UIScrollViewDelegate
     
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -307,5 +337,34 @@ extension SectionedTableAdapter: UITableViewDelegate {
     
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         forwaredScrollDelegate?.scrollViewDidEndDecelerating?(scrollView)
+    }
+}
+
+// MARK: - UITableViewDragDelegate
+extension SectionedTableAdapter: UITableViewDragDelegate {
+    public func tableView(_ tableView: UITableView,
+                          itemsForBeginning session: UIDragSession,
+                          at indexPath: IndexPath) -> [UIDragItem] {
+        guard let moveHandler, moveHandler.canMoveFrom(indexPath) else {
+            return []
+        }
+        
+        let item = UIDragItem(itemProvider: .init())
+        item.localObject = indexPath
+        return [item]
+    }
+    
+    public func tableView(_ tableView: UITableView,
+                          dropSessionDidUpdate session: UIDropSession,
+                          withDestinationIndexPath destinationIndexPath: IndexPath?) -> UITableViewDropProposal {
+        guard let moveHandler, tableView.hasActiveDrag else { return .init(operation: .cancel) }
+        guard let source = session.localDragSession?.items.first?.localObject as? IndexPath else { return .init(operation: .cancel) }
+        guard let dest = destinationIndexPath else { return .init(operation: .cancel) }
+        
+        if !moveHandler.canMoveTo(source, dest) {
+            return .init(operation: .forbidden)
+        }
+        
+        return .init(operation: .move, intent: .insertAtDestinationIndexPath)
     }
 }
